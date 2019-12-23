@@ -1,164 +1,238 @@
-# ConnectedSDK for iOS(Objective-C)
+# ConnectAd SDK for iOS (Objective-C)
 
-## Requirements
-
-1. XCode 10 - (XCode 11 support is under development)
-
-## Installation
-### Installation with CocoaPods
-[CocoaPods](https://cocoapods.org/) is a dependency manager for Swift and Objective-C Cocoa projects, which automates and simplifies the process of using 3rd-party libraries like the ConnectedAdSDK in your projects. You can install it with the following command:
+## Setup
+### Setup with CocoaPods
+[CocoaPods](https://cocoapods.org/) is a dependency manager for Swift and Objective-C Cocoa projects, which automates and simplifies the process of using 3rd-party libraries like the Connect AD SDK in your projects. You can install it with the following command:
 ```
 $ sudo gem install cocoapods
 ```
 
-**Podfile**  To integrate ConnectedSDK into your Xcode project using CocoaPods, specify it in your Podfile:
+To integrate ConnectSDK into your Xcode project using CocoaPods, specify it in your Podfile:
 ```
-pod 'ConnectedSDKiOS_ObjC', :git => 'https://github.com/connsdkimpl/Connected_ObjC.git'
+pod 'ConnectAd_ObjC', :git => 'https://github.com/connsdkimpl/ConnectAd_ObjC.git'
 ```
 
 Then, run the following command:
 ```
 $ pod install
 ```
-Note: Make sure  [Connected_ObjC](https://github.com/connsdkimpl/Connected_ObjC) is public.
-## Integration
-### 1. Configure Ad Units in Your App
-In your app’s `AppDelegate.m` file, in  `application didFinishLaunchingWithOptions:` method,  use the following code:
-```
-[ConnectedAd getConnectedAdDetails:@"YOUR_APP_ID"];
-```
-in `Info.plist` file, add `<key>GADApplicationIdentifier</key><string>YOUR_GADAPPLICATIONIDENTIFIER</string>` to include the `GADApplicationIdentifier` from AdMob.
+**Note: Make sure *ConnectAd_ObjC* is public.**
 
-### 2. Loading Banner Ads
-#### Step 1. Edit Your View Controller’s Header File
+## Initialize Connect AD SDK
 
-In your view controller’s header file, import the ```ConnectedAdBanner.h``` header file and declare an ```ConnectedAdBanner *connectedAdBanner``` property.
+In your app’s *AppDelegate.m* file, in *application didFinishLaunchingWithOptions:* method, use the following code:
+```
+[ConnectAd connectAdInit:@"YOUR_APP_ID" completion:^(NSMutableDictionary *response, NSError * _Nonnull error) {
+   if (error != nil) {
+     NSLog(@"%@", error.localizedDescription);
+   } else {
+     NSLog(@"response: %@", response);
+   }
+ }];
+```
+In *Info.plist* file, add the following key to include the *GADApplicationIdentifier* from AdMob:
+```
+<key>GADApplicationIdentifier</key><string>YOUR_GADAPPLICATIONIDENTIFIER</string>
+```
+
+### Banner Ads
+
+You need to have <i>connect mediation banner ids</i> obtained from web UI  before proceeding; each connect mediation banner id corresponds to your AdMob and MoPub banner ad unit ids.
+
+In your view controller’s header file, import the *ConnectAdBanner.h* header file and declare an *connectAdBanner* property:
 
 ```
 // MyViewController.h
 
-#import "ConnectedAdBanner.h"
+#import "ConnectAdBanner.h"
 
 @interface MyViewController : UIViewController
 {
-  @property (nonatomic) ConnectedAdBanner *connectedAdBanner;
+  @property (nonatomic) ConnectAdBanner *connectAdBanner;
 }
 
 @end
-
 ```
 
-#### Step 2. Edit Your View Controller’s Implementation File
-
-Initialise the following properties to your ConnectedAdBanner.
+Initialise the following properties to your *ConnectAdBanner*:
 
 ```
-self.connectedAdBanner = [[ConnectedAdBanner alloc]initWithFrame:BANNER_FRAME];
-self.connectedAdBanner.adMobConnectedId = @"ADMOB_BANNER_CONNECTED_ID";
-self.connectedAdBanner.moPubConnectedId = @"MOPUB_BANNER_CONNECTED_ID";
-self.connectedAdBanner.rootViewController = self;
-self.connectedAdBanner.delegate = self;
-self.connectedAdBanner.bannerSize = small(or medium if u need a larger one);
-[self.view addSubview:connectedAdBanner];
-```
-Whenever you need to present your banner, call ```loadAds``` of your **ConnectedAdBanner** to load and display the ad.
-```
-[self.connectedAdBanner loadAds];
-```
-Note: If you don't have any of the connected Ids, then there is no need to set values to corresponding properties.
+self.connectAdBanner = [[ConnectAdBanner alloc]initWithFrame:BANNER_FRAME];
 
-### 3. Loading Interstitial Ads
-#### Step 1. Edit Your View Controller’s Header File
+self.connectAdBanner.adMobConnectIds = [[NSMutableArray alloc]initWithObjects:@"ADMOB_BANNER_CONNECT_ID_1",@"ADMOB_BANNER_CONNECT_ID_2", nil];
+self.connectAdBanner.moPubConnectIds = [[NSMutableArray alloc]initWithObjects:@"MOPUB_BANNER_CONNECT_ID_1",@"MOPUB_BANNER_CONNECT_ID_2", nil];
+self.connectAdBanner.rootViewController = self;
+self.connectAdBanner.delegate = self;
+[self.view addSubview:self.connectAdBanner];
+```
+Whenever you need to present your banner, call *loadAds* of your *ConnectAdBanner* to load and display the ad:
+```
+[self.connectAdBanner loadAds];
+```
+**Note: If you don't have any of the connect Ids, then there is no need to set values to corresponding properties.**
 
-In your view controller’s header file, import the ```ConnectedAdInterstitial.h``` header file and declare an ```ConnectedAdInterstitial *connectedAdInterstitial``` property.
+### Interstitial Ads
+
+You need to have *connect mediation interstitial ids* obtained from web UI before proceeding, each connect mediation banner id corresponds to your AdMob and MoPub interstitial ad unit ids.
+
+In your view controller’s header file, import the *ConnectAdInterstitial.h* header file and declare aa *connectAdInterstitial* property:
 
 ```
 // MyViewController.h
 
-#import "ConnectedAdInterstitial.h"
+#import "ConnectAdInterstitial.h"
 
 @interface MyViewController : UIViewController
 {
-    @property (nonatomic) ConnectedAdInterstitial *connectedAdInterstitial;
+    @property (nonatomic) ConnectAdInterstitial *connectAdInterstitial;
 }
 
 @end
+```
+
+Initialise the *ConnectAdInterstitial* object created:
+```
+
+self.connectAdInterstitial = [[ConnectAdInterstitial alloc] init:[[NSMutableArray alloc]initWithObjects:@"ADMOB_INTERSTITIAL_CONNECT_ID_1",@"ADMOB_INTERSTITIAL_CONNECT_ID_2", nil] :[[NSMutableArray alloc]initWithObjects:@"MOPUB_INTERSTITIAL_CONNECT_ID_1",@"MOPUB_INTERSTITIAL_CONNECT_ID_2", nil]];
+self.connectAdInterstitial.delegate = self;
+```
+Whenever you need to show your interstitial ad, call *loadFrom* of your *ConnectAdInterstitial* to load and display the same:
+```
+[self.connectInterstitial loadFrom:self];
+```
+**Note: If you don't have any of the ConnectIds, then please set an empty array for the corresponding item. For example, if your app does not have MoPub integrated, then create a *ConnectAdInterstitial* instance like this:**
+
+```
+self.connectAdInterstitial = [[ConnectAdInterstitial alloc] init:[[NSMutableArray alloc]initWithObjects:@"ADMOB_INTERSTITIAL_CONNECT_ID_1",@"ADMOB_INTERSTITIAL_CONNECT_ID_2", nil] :[[NSMutableArray alloc]init]];
 
 ```
 
-#### Step 2. Edit Your View Controller’s Implementation File
-Initialise the **ConnectedAdInterstitial** object created.
-```
-self.connectedAdInterstitial = [[ConnectedAdInterstitial alloc] init:@"ADMOB_INTERSTITIAL_CONNECTED_ID" :@"MOPUB_INTERSTITIAL_CONNECTED_ID" ];
-self.connectedAdInterstitial.delegate = self;
-```
-Whenever you need to show your interstitial ad, call ```loadFrom``` of your **ConnectedAdInterstitial** to load and display the same.
-```
-[self.connectedAdInterstitial loadFrom:self];
-```
-Note: If you don't have any of the ConnectedIds, then please set an empty string ```@""``` for the corresponding item.
+### Rewarded Video Ads
 
-For example, if your app does not have MoPub integrated, then create a **ConnectedAdInterstitial** instance like this:
+You need to have *connect mediation rewarded video ad ids* obtained from web UI before proceeding, each connect mediation banner id corresponds to your AdMob and MoPub reward video ad unit ids.
 
-```
-self.connectedAdInterstitial = [[ConnectedAdInterstitial alloc] init:@"ADMOB_INTERSTITIAL_CONNECTED_ID" :@"" ];
-```
-### 4. Loading Rewarded Video Ads
-#### Step 1. Edit Your View Controller’s Header File
-
-In your view controller’s header file, import the ```ConnectedAdRewarded.h``` header file and declare an ```ConnectedAdRewarded *connectedAdRewarded``` property.
+In your view controller’s header file, import the *ConnectAdRewarded.h* header file and declare an *connectAdRewarded* property:
 
 ```
 // MyViewController.h
 
-#import "ConnectedAdRewarded.h"
+#import "ConnectAdRewarded.h"
 
 @interface MyViewController : UIViewController
 {
-    @property (nonatomic) ConnectedAdRewarded *connectedAdRewarded;
+    @property (nonatomic) ConnectAdRewarded *connectAdRewarded;
 }
 
 @end
-
 ```
 
-#### Step 2. Edit Your View Controller’s Implementation File
-Initialise the **ConnectedAdRewarded** object created.
+Initialise the *ConnectAdRewarded* object created:
 ```
-self.connectedAdRewarded = [[ConnectedAdRewarded alloc] init:@"ADMOB_REWARDED_CONNECTED_ID" :@"MOPUB_REWARDED_CONNECTED_ID" ];
-self.connectedAdRewarded.delegate = self;
+self.connectAdRewarded = [[ConnectAdRewarded alloc] init:[[NSMutableArray alloc]initWithObjects:@"ADMOB_REWARDED_CONNECT_ID_1", @"ADMOB_REWARDED_CONNECT_ID_2", nil] :[[NSMutableArray alloc]initWithObjects:@"MOPUB_REWARDED_CONNECT_ID_1", @"MOPUB_REWARDED_CONNECT_ID_2", nil ]];
+self.connectAdRewarded.delegate = self;
 ```
-Whenever you need to show your interstitial ad, call ```loadFrom``` of your **ConnectedAdRewarded** to load and display the same.
+Whenever you need to show your interstitial ad, call *loadFrom* of your *ConnectAdRewarded* to load and display the same:
 ```
-[self.connectedAdRewarded loadFrom:self];
+[self.connectAdRewarded loadFrom:self];
 ```
-Note: If you don't have any of the ConnectedIds, then please set an empty string ```@""``` for the corresponding item.
-
-For example, if your app does not have MoPub integrated, then create a **ConnectedAdRewarded** instance like this:
+**Note: If you don't have any of the ConnectIds, then please set an empty array for the corresponding item. For example, if your app does not have MoPub integrated, then create a *ConnectAdRewarded* instance like this:**
 
 ```
-self.connectedAdRewarded = [[ConnectedAdRewarded alloc] init:@"ADMOB_REWARDED_CONNECTED_ID" :@"" ];
+self.connectAdRewarded = [[ConnectAdRewarded alloc] init:[[NSMutableArray alloc]initWithObjects:@"ADMOB_REWARDED_CONNECT_ID_1",@"ADMOB_REWARDED_CONNECT_ID_2", nil] :[[NSMutableArray alloc]init]];
 ```
-### 5. Implementing Delegates
-#### Step 1. Edit Your View Controller’s Header File
-Conform your ViewController to ```ConnectedAdDelegate``` protocol.
+### Implementing Delegates
+Conform your ViewController to *ConnectAdBannerDelegate* protocol:
 ```
 // MyViewController.h
-@interface MyViewController : UIViewController <ConnectedAdDelegate>
+@interface MyViewController : UIViewController <ConnectAdBannerDelegate>
 
 @end
 ```
-#### Step 2. Edit Your View Controller’s Implementation File
 
-Implement all the methods.
+Implement all the methods:
 ```
-- (void)connectedAdDidFailToReceiveAd:(AdType)adType withError:(NSError * _Nullable)error {
-  NSLog(@"delegate ad error from:%ld, Error:%@", (long)adType, error.localizedDescription);
+- (void)onBannerFailed:(AdType)adType withError:(NSError * _Nullable)error {
+    NSLog(@"Banner failed to retrieve ad: %ld, error: %@", (long)adType, error.localizedDescription);
 }
 
-- (void)connectedAdReceivesAd:(AdType)adType {
-  NSLog(@"delegate ad error from:%ld", (long)adType);
+- (void)onBannerDone:(AdType)adType {
+    NSLog(@"Banner successfully retrieved ad: %ld", (long)adType);
 }
+-(void)onBannerExpanded:(AdType)adType{
+    NSLog(@"Banner presented: %ld", (long)adType);
+}
+
+-(void)onBannerCollapsed:(AdType)adType{
+    NSLog(@"Banner dismissed: %ld", (long)adType);
+}
+
+-(void)onBannerClicked:(AdType)adType{
+    NSLog(@"Banner clicked: %ld", (long)adType);
+}
+```
+Conform your ViewController to *ConnectAdRewardedDelegate* protocol:
+```
+// MyViewController.h
+@interface MyViewController : UIViewController <ConnectAdRewardedDelegate>
+
+@end
+```
+
+Implement all the methods:
+```
+-(void)onRewardVideoClosed:(AdType)adType{
+    NSLog(@"RewardedAd closed: %ld", (long)adType);
+}
+
+-(void)onRewardFail:(AdType)adType withError:(NSError*_Nullable)error{
+    NSLog(@"RewardedAd failed to load: %ld, error: %@", (long)adType, error.localizedDescription);
+
+}
+-(void)onRewardVideoStarted:(AdType)adType{
+    NSLog(@"RewardedAd started playing: %ld", (long)adType);
+
+}
+
+- (void)onRewardedVideoCompleted:(AdType)adType {
+  NSLog(@"RewardedAd completed playing: %ld", (long)adType);
+
+}
+-(void)onRewarded:(AdType)adType withReward:(AdReward*_Nullable) rewardItem{
+    NSLog(@"Rewarded ad retrieved: %ld, %@, %ld", (long)adType, rewardItem.currencyType,(long)rewardItem.rewardAmount);
+}
+
+-(void)onRewardVideoClicked:(AdType)adType{
+    NSLog(@"RewardedAd clicked: %ld", (long)adType);
+
+}
+```
+
+Conform your ViewController to *ConnectAdInterstitialDelegate* protocol:
+```
+// MyViewController.h
+@interface MyViewController : UIViewController <ConnectAdInterstitialDelegate>
+
+@end
+```
+
+Implement all the methods:
+```
+-(void)onInterstitialClicked:(AdType)adType{
+  NSLog(@"Interstitial ad clicked: %ld", (long)adType);
+}
+
+-(void)onInterstitialClosed:(AdType)adType{
+  NSLog(@"Interstitial ad closed: %ld", (long)adType);
+
+}
+-(void)onInterstitialDone:(AdType)adType{
+  NSLog(@"Interstitial ad presented: %ld", (long)adType);
+
+}
+-(void)onInterstitialFailed:(AdType)adType withError:(NSError*_Nullable)error{
+  NSLog(@"Interstitial ad failed: %ld, error: %@", (long)adType, error.localizedDescription);
+}
+
 ```
 ## License
 MIT License
