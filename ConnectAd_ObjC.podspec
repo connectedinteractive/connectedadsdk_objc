@@ -1,13 +1,13 @@
 Pod::Spec.new do |s|
  s.name             = 'ConnectAd_ObjC'
- s.version          = '1.0.9'
+ s.version          = '1.0.10'
  s.summary          = 'ConnectAd_ObjC for iOS.'
  s.description      = 'This pod is used for integrating ConnectAd_ObjC in Objective-C iOS projects.'
 
- s.homepage         = 'https://github.com/connsdkimpl/ConnectAd_ObjC'
+ s.homepage         = 'https://github.com/connectedinteractive/connectedadsdk_objc'
  s.license          = { :type => 'MIT', :file => 'LICENSE' }
  s.author           = { 'connsdkimpl' => 'sdkimpl@gmail.com' }
- s.source           = { :git => 'https://github.com/connsdkimpl/ConnectAd_ObjC.git', :tag => s.version.to_s }
+ s.source           = { :git => 'https://github.com/connectedinteractive/connectedadsdk_objc.git', :tag => s.version.to_s }
 
  s.ios.deployment_target = '8.0'
 
