@@ -52,7 +52,9 @@
     if(![self.interstitialOrders firstObject]) {
         NSLog(@"No Interstitial found");
         if (self.delegate != nil &&  [(NSObject*)self.delegate respondsToSelector:@selector(onInterstitialNoAdAvailable)]) {
-            [self.delegate onInterstitialNoAdAvailable];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate onInterstitialNoAdAvailable]; 
+            });
         }
     } else {
         NSInteger interstitialOrder = [self.interstitialOrders.firstObject integerValue];
@@ -132,16 +134,24 @@
                         [self showConnectInterstitial:htmlString];
                     } else {
                         NSError *htlmlError = [NSError errorWithDomain:@"ConnctedAd" code:201 userInfo:@{NSLocalizedDescriptionKey:@"html data not found"}];
-                        [self.delegate onInterstitialFailed:self.adType withError:htlmlError];
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [self.delegate onInterstitialFailed:self.adType withError:htlmlError];
+                        });
                         [self checkExistingConnectedAds];
                     }
 
                 } else {
-                    [self.delegate onInterstitialFailed:self.adType withError:parseError];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self.delegate onInterstitialFailed:self.adType withError:parseError];
+                    });
+
                     [self checkExistingConnectedAds];
                 }
             } else {
-                [self.delegate onInterstitialFailed:self.adType withError:error];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.delegate onInterstitialFailed:self.adType withError:error];    
+                });
+
                 [self checkExistingConnectedAds];
             }
         }];
