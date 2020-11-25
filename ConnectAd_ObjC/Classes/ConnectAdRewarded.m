@@ -7,6 +7,7 @@
 
 bool videoStarted;
 bool videoFailed;
+bool isAdsManagerRewarded;
 NSError* playbackErrorCode;
 
 -(id)init:(NSMutableArray*)adMobIDs :(NSMutableArray*)moPubIDs {
@@ -17,7 +18,12 @@ NSError* playbackErrorCode;
         self.moPubConnectIds = moPubIDs;
     }
     return self;
+}
 
+-(id)init:(NSMutableArray*)adMobIDs :(NSMutableArray*)moPubIDs :(NSMutableArray*)adsManagerIDS {
+    id returnValue = [self init:adMobIDs:moPubIDs];
+    self.adsManagerConnectIds = adsManagerIDS;
+    return returnValue;
 }
 
 -(void)loadFrom: (UIViewController*)viewController{
@@ -36,7 +42,16 @@ NSError* playbackErrorCode;
             if(rewardsArray.count != 0) {
                 self.adMobRewardeds = rewardsArray;
             }
-
+        }
+        
+        NSPredicate *predicateAdsManager = [NSPredicate predicateWithFormat:@"adUnitName = %@", AdKeyToString[adsmanager]];
+        NSArray *filteredAdsManager= [adUnitIds filteredArrayUsingPredicate:predicateAdsManager];
+        if (filteredAdsManager != nil && [filteredAdsManager count] != 0) {
+            AdUnitID *adUnitID = filteredAdsManager.firstObject;
+            NSMutableArray * rewardsArray = adUnitID.rewardedVideo;
+            if(rewardsArray.count != 0) {
+                self.adsManagerRewardeds = rewardsArray;
+            }
         }
 
         NSPredicate *predicate_moPub = [NSPredicate predicateWithFormat:@"adUnitName = %@", AdKeyToString[mopub]];
@@ -71,6 +86,10 @@ NSError* playbackErrorCode;
                 self.adType = ADMOB;
                 [self setAdMobRewarded];
                 break;
+            case AdsManagerOrder:
+                self.adType = ADSMANAGER;
+                [self setAdsManagerRewarded];
+                break;
             default:
                 [self.rewardedOrders removeObjectAtIndex:0];
                 [self loadNewAds];
@@ -80,6 +99,7 @@ NSError* playbackErrorCode;
 
 }
 -(void)setAdMobRewarded {
+    isAdsManagerRewarded = false;
     self.adMobConnectId = self.adMobConnectIds.firstObject;
     NSString *rewardedAdUnitId = @"";
     if (self.adMobConnectId != nil) {
@@ -98,8 +118,30 @@ NSError* playbackErrorCode;
     GADRequest *request = [GADRequest request];
     [GADRewardBasedVideoAd sharedInstance].delegate = self;
     [[GADRewardBasedVideoAd sharedInstance] loadRequest:request withAdUnitID:rewardedAdUnitId];
-
 }
+
+-(void)setAdsManagerRewarded {
+    isAdsManagerRewarded = true;
+    self.adsManagerConnectId = self.adsManagerConnectIds.firstObject;
+    NSString *rewardedAdUnitId = @"";
+    if (self.adsManagerConnectId != nil) {
+        for (int i = 0; i< self.adsManagerRewardeds.count; i++) {
+            AdId *adId = [self.adsManagerRewardeds objectAtIndex:i];
+            if ([adId.connectedId isEqualToString:self.adsManagerConnectId]) {
+                AdId *rewardedAd = [self.adsManagerRewardeds objectAtIndex:i];
+                if(rewardedAd.adUnitId != nil) {
+                    NSString *adUnitId = rewardedAd.adUnitId;
+                    rewardedAdUnitId = adUnitId;
+                }
+                break;
+            }
+        }
+    }
+    DFPRequest *request = [DFPRequest request];
+    [GADRewardBasedVideoAd sharedInstance].delegate = self;
+    [[GADRewardBasedVideoAd sharedInstance] loadRequest:request withAdUnitID:rewardedAdUnitId];
+}
+
 -(void)setMoPubRewarded {
     self.moPubConnectId = self.moPubConnectIds.firstObject;
     NSString *rewardedAdUnitId = @"";
@@ -114,8 +156,7 @@ NSError* playbackErrorCode;
     [MPRewardedVideo loadRewardedVideoAdWithAdUnitID:rewardedAdUnitId withMediationSettings:nil];
 }
 #pragma mark: Admob
-- (void)rewardBasedVideoAd:(GADRewardBasedVideoAd *)rewardBasedVideoAd
-   didRewardUserWithReward:(GADAdReward *)reward {
+- (void)rewardBasedVideoAd:(GADRewardBasedVideoAd *)rewardBasedVideoAd didRewardUserWithReward:(GADAdReward *)reward {
     AdReward *rewardVideoReward = [[AdReward alloc]init];
     rewardVideoReward.currencyType = reward.type;
     rewardVideoReward.rewardAmount = [reward.amount intValue];
@@ -136,13 +177,22 @@ NSError* playbackErrorCode;
     [self.delegate onRewardVideoClosed:self.adType];
 }
 
-- (void)rewardBasedVideoAd:(GADRewardBasedVideoAd *)rewardBasedVideoAd
-    didFailToLoadWithError:(NSError *)error {
+- (void)rewardBasedVideoAd:(GADRewardBasedVideoAd *)rewardBasedVideoAd didFailToLoadWithError:(NSError *)error {
     [self.delegate onRewardFail:self.adType withError:error];
-    if ([self.adMobConnectIds count] != 0) {
+    if (!isAdsManagerRewarded && [self.adMobConnectIds count] != 0) {
         [self.adMobConnectIds removeObjectAtIndex:0];
         if ([self.adMobConnectIds count] != 0) {
             [self setAdMobRewarded];
+        } else {
+            if ([self.rewardedOrders count] != 0) {
+                [self.rewardedOrders removeObjectAtIndex:0];
+                [self loadNewAds];
+            }
+        }
+    } else if (isAdsManagerRewarded && [self.adsManagerConnectIds count] != 0) {
+        [self.adsManagerConnectIds removeObjectAtIndex:0];
+        if ([self.adsManagerConnectIds count] != 0) {
+            [self setAdsManagerRewarded];
         } else {
             if ([self.rewardedOrders count] != 0) {
                 [self.rewardedOrders removeObjectAtIndex:0];
@@ -168,7 +218,6 @@ NSError* playbackErrorCode;
     if ([MPRewardedVideo hasAdAvailableForAdUnitID:adUnitID]) {
         [MPRewardedVideo presentRewardedVideoAdForAdUnitID:adUnitID fromViewController:rootViewController withReward:nil];
     }
-
 }
 
 - (void)rewardedVideoAdDidFailToLoadForAdUnitID:(NSString *)adUnitID error:(NSError *)error{

@@ -7,7 +7,8 @@
 
 NSString * const AdKeyToString[] = {
     [admob] = @"admob",
-    [mopub] = @"mopub"
+    [mopub] = @"mopub",
+    [adsmanager] = @"adsmanager"
 };
 BOOL initializationStatus;
 
@@ -224,28 +225,55 @@ BOOL initializationStatus;
                                         NSString *appUnitId = rewardedVideo.adUnitId;
                                         adMobAppUnitId = appUnitId;
                                     }
-                                    if (![adMobAppUnitId isEqualToString:@""]) {
+                                    
+                                    NSPredicate *predicateAdsManager = [NSPredicate predicateWithFormat:@"adUnitName = %@", AdKeyToString[adsmanager]];
+                                    NSArray *filteredAdsManager = [adUnitids filteredArrayUsingPredicate:predicateAdsManager];
+                                    AdUnitID *adsManager = filteredAdsManager.firstObject;
+                                    NSString *adsManagerAppUnitId = @"";
+                                    if (adsManager != nil) {
+                                        NSMutableArray *banners = adsManager.banner;
+                                        if (banners.count != 0) {
+                                            AdId *banner = banners.firstObject;
+                                            NSString *appUnitId = banner.adUnitId;
+                                            adsManagerAppUnitId = appUnitId;
+                                        }
+                                        NSMutableArray *interstitials = adMob.interstitial;
+                                        if(interstitials.count != 0){
+                                            AdId *interstitial = interstitials.firstObject;
+                                            NSString *appUnitId = interstitial.adUnitId;
+                                            adsManagerAppUnitId = appUnitId;
+                                        }
+                                        NSMutableArray *rewardedVideos = adMob.rewardedVideo;
+                                        if(rewardedVideos.count != 0){
+                                            AdId *rewardedVideo = rewardedVideos.firstObject;
+                                            NSString *appUnitId = rewardedVideo.adUnitId;
+                                            adsManagerAppUnitId = appUnitId;
+                                        }
+                                    }
+                                    
+                                    
+                                    if (![adMobAppUnitId isEqualToString:@""] || ![adsManagerAppUnitId isEqualToString:@""]) {
                                         dispatch_async(dispatch_get_main_queue(), ^{
                                             [[GADMobileAds sharedInstance] startWithCompletionHandler:^(GADInitializationStatus * _Nonnull status) {
                                                 for (int i = 0; i<status.adapterStatusesByClassName.allValues.count; i++) {
                                                     GADAdapterStatus *gadAdapterStatus = [status.adapterStatusesByClassName.allValues objectAtIndex:i];
                                                     if(gadAdapterStatus.state == GADAdapterInitializationStateReady){
-                                                        NSLog(@"ADMOB Initialisation success!");
+                                                        NSLog(@"AdMob/AdsManager Initialization success!");
                                                         initializationStatus = true;
                                                         [admobResponse setObject:[NSNumber numberWithBool:true] forKey:@"success"];
-                                                        [admobResponse setValue:@"Admob initialization success" forKey:@"message"];
+                                                        [admobResponse setValue:@"Admob/AdsManager initialization success" forKey:@"message"];
                                                         [mopubResponse setObject:[NSNumber numberWithBool:true] forKey:@"success"];
                                                         [mopubResponse setValue:@"Mopub initialization success" forKey:@"message"];
-                                                        [getConnectAdDetailsResponse setObject:admobResponse forKey:@"Admob"];
+                                                        [getConnectAdDetailsResponse setObject:admobResponse forKey:@"Google"];
                                                         [getConnectAdDetailsResponse setObject:mopubResponse forKey:@"Mopub"];
                                                         completion(getConnectAdDetailsResponse, nil);                                   }
                                                 }
                                                 if (initializationStatus == false) {
                                                     [admobResponse setObject:[NSNumber numberWithBool:false] forKey:@"success"];
-                                                    [admobResponse setValue:@"Admob initialization failed" forKey:@"message"];
+                                                    [admobResponse setValue:@"Admob/AdsManager initialization failed" forKey:@"message"];
                                                     [mopubResponse setObject:[NSNumber numberWithBool:true] forKey:@"success"];
                                                     [mopubResponse setValue:@"Mopub initialization success" forKey:@"message"];
-                                                    [getConnectAdDetailsResponse setObject:admobResponse forKey:@"Admob"];
+                                                    [getConnectAdDetailsResponse setObject:admobResponse forKey:@"Google"];
                                                     [getConnectAdDetailsResponse setObject:mopubResponse forKey:@"Mopub"];
                                                     completion(getConnectAdDetailsResponse, nil);
                                                 }
@@ -253,12 +281,13 @@ BOOL initializationStatus;
                                         });
                                     } else {
                                         [admobResponse setObject:[NSNumber numberWithBool:false] forKey:@"success"];
-                                        [admobResponse setValue:@"Admob Data not found" forKey:@"message"];
+                                        [admobResponse setValue:@"Admob/AdsManager Data not found" forKey:@"message"];
                                         [mopubResponse setObject:[NSNumber numberWithBool:true] forKey:@"success"];
                                         [mopubResponse setValue:@"Mopub initialization success" forKey:@"message"];
-                                        [getConnectAdDetailsResponse setObject:admobResponse forKey:@"Admob"];
+                                        [getConnectAdDetailsResponse setObject:admobResponse forKey:@"Google"];
                                         [getConnectAdDetailsResponse setObject:mopubResponse forKey:@"Mopub"];
-                                        completion(getConnectAdDetailsResponse, nil);                    }
+                                        completion(getConnectAdDetailsResponse, nil);
+                                    }
                                 }
                             }];
                         });
@@ -268,50 +297,76 @@ BOOL initializationStatus;
                         NSArray *filtered = [adUnitids filteredArrayUsingPredicate:predicate];
                         AdUnitID *adMob = filtered.firstObject;
                         NSString *adMobAppUnitId = @"";
-                        if (adMob != nil) {
-                            NSMutableArray *banners = adMob.banner;
+                        
+                        NSPredicate *predicateAdsManager = [NSPredicate predicateWithFormat:@"adUnitName = %@", AdKeyToString[adsmanager]];
+                        NSArray *filteredAdsManager = [adUnitids filteredArrayUsingPredicate:predicateAdsManager];
+                        AdUnitID *adsmanager = filteredAdsManager.firstObject;
+                        NSString *adsManagerAppUnitId = @"";
+                        
+                        if (adMob != nil || adsmanager != nil) {
+                            NSMutableArray *banners = adMob != nil ? adMob.banner : [NSMutableArray array];
                             if (banners.count != 0) {
                                 AdId *banner = banners.firstObject;
                                 NSString *appUnitId = banner.adUnitId;
                                 adMobAppUnitId = appUnitId;
                             }
-                            NSMutableArray *interstitials = adMob.interstitial;
+                            NSMutableArray *interstitials = adMob != nil ? adMob.interstitial : [NSMutableArray array];
                             if(interstitials.count != 0){
                                 AdId *interstitial = interstitials.firstObject;
                                 NSString *appUnitId = interstitial.adUnitId;
                                 adMobAppUnitId = appUnitId;
                             }
-                            NSMutableArray *rewardedVideos = adMob.rewardedVideo;
+                            NSMutableArray *rewardedVideos = adMob != nil ? adMob.rewardedVideo : [NSMutableArray array];
                             if(rewardedVideos.count != 0){
                                 AdId *rewardedVideo = rewardedVideos.firstObject;
                                 NSString *appUnitId = rewardedVideo.adUnitId;
                                 adMobAppUnitId = appUnitId;
                             }
-                            if (![adMobAppUnitId isEqualToString:@""]) {
+                            
+                            banners = adsmanager != nil ? adsmanager.banner : [NSMutableArray array];
+                            if (banners.count != 0) {
+                                AdId *banner = banners.firstObject;
+                                NSString *appUnitId = banner.adUnitId;
+                                adsManagerAppUnitId = appUnitId;
+                            }
+                            interstitials = adsmanager != nil ? adsmanager.interstitial :[NSMutableArray array];
+                            if(interstitials.count != 0){
+                                AdId *interstitial = interstitials.firstObject;
+                                NSString *appUnitId = interstitial.adUnitId;
+                                adsManagerAppUnitId = appUnitId;
+                            }
+                            rewardedVideos = adsmanager != nil ? adsmanager.rewardedVideo : [NSMutableArray array];
+                            if(rewardedVideos.count != 0){
+                                AdId *rewardedVideo = rewardedVideos.firstObject;
+                                NSString *appUnitId = rewardedVideo.adUnitId;
+                                adsManagerAppUnitId = appUnitId;
+                            }
+                            
+                            if (![adMobAppUnitId isEqualToString:@""] || ![adsManagerAppUnitId isEqualToString:@""]) {
                                 dispatch_async(dispatch_get_main_queue(), ^{
                                     [[GADMobileAds sharedInstance] startWithCompletionHandler:^(GADInitializationStatus * _Nonnull status) {
                                         for (int i = 0; i<status.adapterStatusesByClassName.allValues.count; i++) {
                                             GADAdapterStatus *gadAdapterStatus = [status.adapterStatusesByClassName.allValues objectAtIndex:i];
                                             if(gadAdapterStatus.state == GADAdapterInitializationStateReady){
-                                                NSLog(@"ADMOB initialization success!");
+                                                NSLog(@"AdMob/AdsManager Manager initialization success!");
                                                 initializationStatus = true;
                                                 [admobResponse setObject:[NSNumber numberWithBool:true] forKey:@"success"];
-                                                [admobResponse setValue:@"Admob initialization success" forKey:@"message"];
+                                                [admobResponse setValue:@"AdMob/AdsManager initialization success" forKey:@"message"];
                                                 [mopubResponse setObject:[NSNumber numberWithBool:false] forKey:@"success"];
-                                                [mopubResponse setValue:@"Mopub initialization failed" forKey:@"message"];
-                                                [getConnectAdDetailsResponse setObject:admobResponse forKey:@"Admob"];
+                                                [mopubResponse setValue:@"AdMob/AdsManager initialization failed" forKey:@"message"];
+                                                [getConnectAdDetailsResponse setObject:admobResponse forKey:@"Google"];
                                                 [getConnectAdDetailsResponse setObject:mopubResponse forKey:@"Mopub"];
                                                 completion(getConnectAdDetailsResponse, nil);
                                             }
                                         }
                                         if (initializationStatus == false) {
-                                            NSError *error = [NSError errorWithDomain:@"ConnectAd" code:3457 userInfo:@{NSLocalizedDescriptionKey:@"Admob initialization failed & Mopub data not found"}];
+                                            NSError *error = [NSError errorWithDomain:@"ConnectAd" code:3457 userInfo:@{NSLocalizedDescriptionKey:@"AdMob/AdsManager initialization failed & Mopub data not found"}];
                                             completion(nil, error);
                                         }
                                     }];
                                 });
                             } else {
-                                NSError *error = [NSError errorWithDomain:@"ConnectAd" code:3457 userInfo:@{NSLocalizedDescriptionKey:@"Admob & Mopub data not found"}];
+                                NSError *error = [NSError errorWithDomain:@"ConnectAd" code:3457 userInfo:@{NSLocalizedDescriptionKey:@"AdMob/AdsManager & Mopub data not found"}];
                                 completion(nil, error);
                             }
                         }

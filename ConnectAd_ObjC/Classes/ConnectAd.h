@@ -12,12 +12,14 @@ typedef NS_ENUM(NSInteger, AdType) {
     // Vertical
     ADMOB,
     MOPUB,
-    CONNECT
+    CONNECT,
+    ADSMANAGER
 };
 
 typedef enum AdKey {
     admob,
     mopub,
+    adsmanager
 } FormatType;
 
 extern NSString * _Nullable const AdKeyToString[];
@@ -25,7 +27,8 @@ extern NSString * _Nullable const AdKeyToString[];
 typedef enum: int {
     AdMobOrder = 1 ,
     MoPubOrder = 2 ,
-    ConnectOrder = 3
+    ConnectOrder = 3,
+    AdsManagerOrder = 4
 }AdOrder;
 
 @protocol ConnectAdBannerDelegate
