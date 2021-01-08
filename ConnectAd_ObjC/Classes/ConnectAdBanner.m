@@ -5,6 +5,8 @@
 @implementation ConnectAdBanner
 @synthesize delegate;
 
+bool isAdsManager;
+
 - (id)initWithFrame:(CGRect)theFrame {
     self = [super initWithFrame:theFrame];
     if (self) {
@@ -105,6 +107,16 @@ static BOOL IsOperatingSystemAtLeastVersion(NSInteger majorVersion) {
                     self.adMobBanners = bannerArray;
                 }
             }
+            
+            NSPredicate *predicateAdsManager = [NSPredicate predicateWithFormat:@"adUnitName = %@", AdKeyToString[adsmanager]];
+            NSArray *filteredAdsManager = [adUnitIds filteredArrayUsingPredicate:predicateAdsManager];
+            if (filteredAdsManager != nil && [filteredAdsManager count] != 0) {
+                AdUnitID *adUnitID = filteredAdsManager.firstObject;
+                NSMutableArray * bannerArray = adUnitID.banner;
+                if(bannerArray.count != 0) {
+                    self.adsManagerBanners = bannerArray;
+                }
+            }
 
             NSPredicate *predicate_moPub = [NSPredicate predicateWithFormat:@"adUnitName = %@", AdKeyToString[mopub]];
             NSArray *filtered_moPub = [adUnitIds filteredArrayUsingPredicate:predicate_moPub];
@@ -131,7 +143,6 @@ static BOOL IsOperatingSystemAtLeastVersion(NSInteger majorVersion) {
     if(![self.bannerOrders firstObject]) {
         NSLog(@"No banner found");
         if (self.delegate != nil &&  [(NSObject*)self.delegate respondsToSelector:@selector(onBannerNoAdAvailable)]) {
-
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.delegate onBannerNoAdAvailable]; 
             });
@@ -142,6 +153,10 @@ static BOOL IsOperatingSystemAtLeastVersion(NSInteger majorVersion) {
             case AdMobOrder:
                 self.adType = ADMOB;
                 [self setAdMobBanner];
+                break;
+            case AdsManagerOrder:
+                self.adType = ADSMANAGER;
+                [self setAdsManagerBanner];
                 break;
             case MoPubOrder:
                 self.adType = MOPUB;
@@ -158,9 +173,9 @@ static BOOL IsOperatingSystemAtLeastVersion(NSInteger majorVersion) {
 }
 
 -(void)setAdMobBanner {
+    isAdsManager = false;
     self.adMobConnectId = self.adMobConnectIds.firstObject;
-    self.adMobBannerView = [[GADBannerView alloc]
-                            initWithAdSize:kGADAdSizeBanner];
+    self.adMobBannerView = [[GADBannerView alloc] initWithAdSize:kGADAdSizeBanner];
 
     [self addBannerView:self.adMobBannerView];
     NSString *bannerAdUnitId = @"";
@@ -180,6 +195,31 @@ static BOOL IsOperatingSystemAtLeastVersion(NSInteger majorVersion) {
     self.adMobBannerView.rootViewController = self.rootViewController;
     [self.adMobBannerView loadRequest:request];
 }
+
+-(void)setAdsManagerBanner {
+    isAdsManager = true;
+    self.adsManagerConnectId = self.adsManagerConnectIds.firstObject;
+    self.adsManagerBannerView = [[DFPBannerView alloc]
+                            initWithAdSize:kGADAdSizeBanner];
+
+    [self addBannerView:self.adsManagerBannerView];
+    NSString *bannerAdUnitId = @"";
+    if (self.adsManagerConnectId != nil) {
+        if ([self.adsManagerBanners count] != 0) {
+            for (int i = 0; i< self.adsManagerBanners.count; i++) {
+                AdId *adId = [self.adsManagerBanners objectAtIndex:i];
+                if ([adId.connectedId isEqualToString:self.adsManagerConnectId]) {
+                    bannerAdUnitId = adId.adUnitId;
+                }
+            }
+        }
+    }
+    self.adsManagerBannerView.adUnitID = bannerAdUnitId;
+    self.adsManagerBannerView.delegate = self;
+    self.adsManagerBannerView.rootViewController = self.rootViewController;
+    [self.adsManagerBannerView loadRequest:[DFPRequest request]];
+}
+
 -(void)setMoPubBanner{
     self.moPubConnectId = self.moPubConnectIds.firstObject;
     NSString *bannerAdUnitId = @"";
@@ -298,16 +338,34 @@ static BOOL IsOperatingSystemAtLeastVersion(NSInteger majorVersion) {
     [self.delegate onBannerDone:self.adType];
 }
 
-- (void)adView:(nonnull GADBannerView *)bannerView
-didFailToReceiveAdWithError:(nonnull GADRequestError *)error{
-    [self removeBannerView:self.adMobBannerView];
-    self.adMobBannerView = [[GADBannerView alloc]init];
-    self.adMobBannerView .hidden = YES;
+- (void)adView:(nonnull GADBannerView *)bannerView didFailToReceiveAdWithError:(nonnull GADRequestError *)error{
+    
+    if (isAdsManager) {
+        [self removeBannerView:self.adsManagerBannerView];
+        self.adsManagerBannerView = [[DFPBannerView alloc]init];
+        self.adsManagerBannerView .hidden = YES;
+    } else {
+        [self removeBannerView:self.adMobBannerView];
+        self.adMobBannerView = [[GADBannerView alloc]init];
+        self.adMobBannerView .hidden = YES;
+    }
+    
     [self.delegate onBannerFailed:self.adType withError:error];
-    if ([self.adMobConnectIds count] != 0) {
+    
+    if ([self.adMobConnectIds count] != 0 && !isAdsManager) {
         [self.adMobConnectIds removeObjectAtIndex:0];
         if (self.adMobConnectIds.count != 0) {
             [self setAdMobBanner];
+        } else {
+            if ([self.bannerOrders count] != 0) {
+                [self.bannerOrders removeObjectAtIndex:0];
+                [self loadNewAds];
+            }
+        }
+    } else if ([self.adsManagerConnectIds count] != 0 && isAdsManager) {
+        [self.adsManagerConnectIds removeObjectAtIndex:0];
+        if (self.adsManagerConnectIds.count != 0) {
+            [self setAdsManagerBanner];
         } else {
             if ([self.bannerOrders count] != 0) {
                 [self.bannerOrders removeObjectAtIndex:0];
@@ -325,12 +383,10 @@ didFailToReceiveAdWithError:(nonnull GADRequestError *)error{
 - (void)adViewWillPresentScreen:(nonnull GADBannerView *)bannerView {
     [self.delegate onBannerExpanded:self.adType];
     [self.delegate onBannerClicked:self.adType];
-
 }
 
 - (void)adViewDidDismissScreen:(nonnull GADBannerView *)bannerView{
     [self.delegate onBannerCollapsed:self.adType];
-
 }
 
 //onclick of banner - Admob

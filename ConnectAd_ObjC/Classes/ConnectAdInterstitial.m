@@ -5,6 +5,8 @@
 @implementation ConnectAdInterstitial
 @synthesize moPubConnectId,adMobConnectId,interstitialOrders;
 
+bool isAdsManagerInterstitial = false;
+
 -(id)init:(NSMutableArray*)adMobIDs :(NSMutableArray*)moPubIDs {
     if ([adMobIDs count] !=0) {
         self.adMobConnectIds = adMobIDs;
@@ -13,6 +15,12 @@
         self.moPubConnectIds = moPubIDs;
     }
     return self;
+}
+
+-(id)init:(NSMutableArray*)adMobIDs :(NSMutableArray*)moPubIDs :(NSMutableArray*)adsManagerIDS {
+    id returnValue = [self init:adMobIDs:moPubIDs];
+    self.adsManagerConnectIds = adsManagerIDS;
+    return returnValue;
 }
 
 -(void)loadFrom: (UIViewController*)viewController{
@@ -32,6 +40,16 @@
                 self.adMobInterstitials = interstitialArray;
             }
         }
+        
+        NSPredicate *predicateAdsManager = [NSPredicate predicateWithFormat:@"adUnitName = %@", AdKeyToString[adsmanager]];
+        NSArray *filteredAdsManager = [adUnitIds filteredArrayUsingPredicate:predicateAdsManager];
+        if (filteredAdsManager != nil && [filteredAdsManager count] != 0) {
+            AdUnitID *adUnitID = filteredAdsManager.firstObject;
+            NSMutableArray * interstitialArray = adUnitID.interstitial;
+            if(interstitialArray.count != 0) {
+                self.adsManagerInterstitials = interstitialArray;
+            }
+        }
 
         NSPredicate *predicate_moPub = [NSPredicate predicateWithFormat:@"adUnitName = %@", AdKeyToString[mopub]];
         NSArray *filtered_moPub = [adUnitIds filteredArrayUsingPredicate:predicate_moPub];
@@ -48,7 +66,7 @@
     }
     [self loadNewAds];
 }
--(void)loadNewAds{
+-(void)loadNewAds {
     if(![self.interstitialOrders firstObject]) {
         NSLog(@"No Interstitial found");
         if (self.delegate != nil &&  [(NSObject*)self.delegate respondsToSelector:@selector(onInterstitialNoAdAvailable)]) {
@@ -66,6 +84,10 @@
             case AdMobOrder:
                 self.adType = ADMOB;
                 [self setAdMobInterstitial];
+                break;
+            case AdsManagerOrder:
+                self.adType = ADSMANAGER;
+                [self setAdsManagerInterstitial];
                 break;
             case ConnectOrder:
                 self.adType = CONNECT;
@@ -92,6 +114,7 @@
 }
 
 -(void)setAdMobInterstitial{
+    isAdsManagerInterstitial = false;
     self.adMobConnectId = self.adMobConnectIds.firstObject;
     NSString *interstitialAdUnitId = @"";
     if(self.adMobConnectId != nil){
@@ -106,6 +129,24 @@
     self.adMobInterstitial = [[GADInterstitial alloc]initWithAdUnitID:interstitialAdUnitId];
     self.adMobInterstitial.delegate = self;
     [self.adMobInterstitial loadRequest:request];
+}
+
+-(void)setAdsManagerInterstitial{
+    isAdsManagerInterstitial = true;
+    self.adsManagerConnectId = self.adsManagerConnectIds.firstObject;
+    NSString *interstitialAdUnitId = @"";
+    if(self.adsManagerConnectId != nil){
+        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"connectedId = %@", self.adsManagerConnectId];
+        AdId *interstitialAd_AdsManager = [self.adsManagerInterstitials filteredArrayUsingPredicate:predicate].firstObject;
+        if (interstitialAd_AdsManager.adUnitId != nil) {
+            interstitialAdUnitId = interstitialAd_AdsManager.adUnitId;
+        }
+
+    }
+    DFPRequest *request = [DFPRequest request];
+    self.adsManagerInterstitial = [[DFPInterstitial alloc]initWithAdUnitID:interstitialAdUnitId];
+    self.adsManagerInterstitial.delegate = self;
+    [self.adsManagerInterstitial loadRequest:request];
 }
 
 #pragma mark - ConnectAd
@@ -187,17 +228,29 @@
 
 #pragma mark: Admob
 - (void)interstitialDidReceiveAd:(GADInterstitial *)ad{
-    if ([self.adMobInterstitial isReady]) {
+    if (isAdsManagerInterstitial && self.adsManagerInterstitial.isReady) {
+        [self.adsManagerInterstitial presentFromRootViewController:_rootViewController];
+    } else if ([self.adMobInterstitial isReady]) {
         [self.adMobInterstitial presentFromRootViewController:_rootViewController];
     }
 }
 
 - (void)interstitial:(GADInterstitial *)ad didFailToReceiveAdWithError:(GADRequestError *)error{
     [self.delegate onInterstitialFailed:self.adType withError:error];
-    if([self.adMobConnectIds count] != 0) {
+    if(!isAdsManagerInterstitial && [self.adMobConnectIds count] != 0) {
         [self.adMobConnectIds removeObjectAtIndex:0];
         if ([self.adMobConnectIds count] !=  0) {
             [self setAdMobInterstitial];
+        } else {
+            if ([self.interstitialOrders count] != 0) {
+                [self.interstitialOrders removeObjectAtIndex:0];
+                [self loadNewAds];
+            }
+        }
+    } else if(isAdsManagerInterstitial && [self.adsManagerConnectIds count] != 0) {
+        [self.adsManagerConnectIds removeObjectAtIndex:0];
+        if ([self.adsManagerConnectIds count] !=  0) {
+            [self setAdsManagerInterstitial];
         } else {
             if ([self.interstitialOrders count] != 0) {
                 [self.interstitialOrders removeObjectAtIndex:0];
