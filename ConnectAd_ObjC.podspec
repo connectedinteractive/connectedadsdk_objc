@@ -20,5 +20,6 @@ Pod::Spec.new do |s|
  s.user_target_xcconfig = { 'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES' }
 
  s.static_framework = true
- s.dependencies = { "mopub-ios-sdk/Core": "~> 5.14.0", "Google-Mobile-Ads-SDK": "~> 7.58.0" }
+
+ s.dependencies = { "mopub-ios-sdk/Core": "~> 5.12.1", "Google-Mobile-Ads-SDK": "~> 8.6.0" }
 end

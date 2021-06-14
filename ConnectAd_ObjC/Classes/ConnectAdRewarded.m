@@ -116,8 +116,31 @@ NSError* playbackErrorCode;
         }
     }
     GADRequest *request = [GADRequest request];
-    [GADRewardBasedVideoAd sharedInstance].delegate = self;
-    [[GADRewardBasedVideoAd sharedInstance] loadRequest:request withAdUnitID:rewardedAdUnitId];
+    [GADRewardedAd loadWithAdUnitID:rewardedAdUnitId
+                              request:request
+                    completionHandler:^(GADRewardedAd *ad, NSError *error) {
+        if (error) {
+          NSLog(@"Rewarded ad failed to load with error: %@", [error localizedDescription]);
+          return;
+        }
+        self.rewardedAd = ad;
+        NSLog(@"Rewarded ad loaded.");
+        self.rewardedAd.fullScreenContentDelegate = self;
+        
+        if (self.rewardedAd) {
+            [self.rewardedAd presentFromRootViewController:self->rootViewController
+                                  userDidEarnRewardHandler:^ {
+                GADAdReward *reward = self.rewardedAd.adReward;
+                AdReward *rewardVideoReward = [[AdReward alloc]init];
+                rewardVideoReward.currencyType = reward.type;
+                rewardVideoReward.rewardAmount = [reward.amount intValue];
+                [self.delegate onRewardedVideoCompleted:self.adType withReward:rewardVideoReward];
+                
+            }];
+        } else {
+            NSLog(@"Ad wasn't ready");
+        }
+    }];
 }
 
 -(void)setAdsManagerRewarded {
@@ -137,9 +160,32 @@ NSError* playbackErrorCode;
             }
         }
     }
-    DFPRequest *request = [DFPRequest request];
-    [GADRewardBasedVideoAd sharedInstance].delegate = self;
-    [[GADRewardBasedVideoAd sharedInstance] loadRequest:request withAdUnitID:rewardedAdUnitId];
+    GAMRequest *request = [GAMRequest request];
+    [GADRewardedAd loadWithAdUnitID:rewardedAdUnitId
+                              request:request
+                    completionHandler:^(GADRewardedAd *ad, NSError *error) {
+        if (error) {
+          NSLog(@"Rewarded ad failed to load with error: %@", [error localizedDescription]);
+          return;
+        }
+        self.rewardedAd = ad;
+        NSLog(@"Rewarded ad loaded.");
+        self.rewardedAd.fullScreenContentDelegate = self;
+        
+        if (self.rewardedAd) {
+            [self.rewardedAd presentFromRootViewController:self->rootViewController
+                                  userDidEarnRewardHandler:^ {
+                GADAdReward *reward = self.rewardedAd.adReward;
+                AdReward *rewardVideoReward = [[AdReward alloc]init];
+                rewardVideoReward.currencyType = reward.type;
+                rewardVideoReward.rewardAmount = [reward.amount intValue];
+                [self.delegate onRewardedVideoCompleted:self.adType withReward:rewardVideoReward];
+                
+            }];
+        } else {
+            NSLog(@"Ad wasn't ready");
+        }
+    }];
 }
 
 -(void)setMoPubRewarded {
@@ -156,28 +202,14 @@ NSError* playbackErrorCode;
     [MPRewardedVideo loadRewardedVideoAdWithAdUnitID:rewardedAdUnitId withMediationSettings:nil];
 }
 #pragma mark: Admob
-- (void)rewardBasedVideoAd:(GADRewardBasedVideoAd *)rewardBasedVideoAd didRewardUserWithReward:(GADAdReward *)reward {
-    AdReward *rewardVideoReward = [[AdReward alloc]init];
-    rewardVideoReward.currencyType = reward.type;
-    rewardVideoReward.rewardAmount = [reward.amount intValue];
-    [self.delegate onRewardedVideoCompleted:self.adType withReward:rewardVideoReward];
-}
-
-- (void)rewardBasedVideoAdDidReceiveAd:(GADRewardBasedVideoAd *)rewardBasedVideoAd {
-    if ([[GADRewardBasedVideoAd sharedInstance] isReady] == true) {
-        [[GADRewardBasedVideoAd sharedInstance] presentFromRootViewController:rootViewController];
-    }
-}
-
-- (void)rewardBasedVideoAdDidStartPlaying:(GADRewardBasedVideoAd *)rewardBasedVideoAd {
+/// Tells the delegate that the rewarded ad was presented.
+- (void)adDidPresentFullScreenContent:(id)ad {
     [self.delegate onRewardVideoStarted:self.adType];
 }
 
-- (void)rewardBasedVideoAdDidClose:(GADRewardBasedVideoAd *)rewardBasedVideoAd {
-    [self.delegate onRewardVideoClosed:self.adType];
-}
-
-- (void)rewardBasedVideoAd:(GADRewardBasedVideoAd *)rewardBasedVideoAd didFailToLoadWithError:(NSError *)error {
+/// Tells the delegate that the rewarded ad failed to present.
+- (void)ad:(id)ad
+didFailToPresentFullScreenContentWithError:(NSError *)error {
     [self.delegate onRewardFail:self.adType withError:error];
     if (!isAdsManagerRewarded && [self.adMobConnectIds count] != 0) {
         [self.adMobConnectIds removeObjectAtIndex:0];
@@ -207,9 +239,19 @@ NSError* playbackErrorCode;
     }
 }
 
--(void)rewardBasedVideoAdWillLeaveApplication:(GADRewardBasedVideoAd *)rewardBasedVideoAd {
-    [self.delegate onRewardVideoClicked:self.adType];
+/// Tells the delegate that the rewarded ad was dismissed.
+- (void)adDidDismissFullScreenContent:(id)ad {
+    [self.delegate onRewardVideoClosed:self.adType];
 }
+
+///The willLeaveApplication callback for all ad formats has been removed in favor of the applicationDidEnterBackground: and sceneDidEnterBackground: methods.
+///Using OS-level APIs notify you whenever users leave your app, regardless of whether or not it is due to an ad interaction.
+///Note that the willLeaveApplication callback was never intended to be an ad click handler, and relying on this callback to report clicks did not produce an accurate metric.
+///For example, a click on the AdChoices icon that launched an external browser invoked the callback but did not count a click.
+
+//-(void)rewardBasedVideoAdWillLeaveApplication:(GADRewardBasedVideoAd *)rewardBasedVideoAd {
+//    [self.delegate onRewardVideoClicked:self.adType];
+//}
 
 #pragma mark: Mopub
 
