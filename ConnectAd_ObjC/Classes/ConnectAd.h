@@ -76,6 +76,10 @@ NS_ASSUME_NONNULL_BEGIN
 +(ConnectAd*)sharedInstance;
 @property (nonatomic, assign) AdType adType;
 
+#pragma mark: ATT Policies
++(void)requestAppTrackingPermissionWithCompletion: (void(^)(NSUInteger status))completion;
++(bool)needsAppTrackingPermission;
+
 @end
 
 NS_ASSUME_NONNULL_END
