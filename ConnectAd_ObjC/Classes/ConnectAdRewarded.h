@@ -4,7 +4,7 @@
 #import <UIKit/UIKit.h>
 #import "ConnectAd.h"
 #import <GoogleMobileAds/GoogleMobileAds.h>
-#import "MoPub.h"
+#import <MoPubSDK/MoPub.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

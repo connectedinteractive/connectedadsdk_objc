@@ -2,7 +2,7 @@
 
 #import <UIKit/UIKit.h>
 #import <GoogleMobileAds/GoogleMobileAds.h>
-#import "MoPub.h"
+#import <MoPubSDK/MoPub.h>
 #import "ConnectAd.h"
 #import "ConnectBannerView.h"
 
