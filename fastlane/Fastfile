@@ -1,0 +1,83 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+@RELEASE_MESSAGE_PREFIX = "Release Version"
+
+platform :ios do
+    before_all do
+      setup_circle_ci
+    end
+  
+    desc "Releases the Connect Ad SDK pod"
+    lane :deploy do
+        if is_ci
+            sh("git", "checkout", "master")
+        end
+    
+        next unless ensure_can_release
+
+        pod_lib_lint(allow_warnings: true)
+        @CHANGELOG = changelog_from_git_commits
+        @VERSION = version_bump_podspec(bump_type: get_bump_type)
+        
+        git_add
+        git_commit(path: ".", message: "#{@RELEASE_MESSAGE_PREFIX} #{@VERSION}")
+        add_git_tag(tag: "#{@VERSION}")
+        # push_to_git_remote
+
+        github_release = set_github_release(
+            repository_name: "connectedinteractive/connected-ad-sdk-objc",
+            api_token: ENV["GITHUB_TOKEN"],
+            name: "#{@RELEASE_MESSAGE_PREFIX} #{@VERSION}",
+            tag_name: "#{@VERSION}",
+            description: "#{@CHANGELOG}",
+            commitish: "master",
+            upload_assets: []
+        )
+        clone_podspec_repo_if_dont_exists
+        pod_push(
+			path: "ConnectAd_ObjC.podspec", 
+			repo: "CocoaPodsSpecs",
+			allow_warnings: true
+		)
+    end
+
+    def ensure_can_release  
+        if last_git_commit[:message].include? @RELEASE_MESSAGE_PREFIX
+            UI.important "We are already released, no new changes, ignoring release process"
+            return
+        end
+        
+        true
+    end
+
+    def get_bump_type
+        commit_message = last_git_commit[:message]
+        if commit_message.include? "[major]"
+            "major"
+        elsif commit_message.include? "[minor]"
+            "minor"
+        else
+            "patch"
+        end
+    end
+
+    def clone_podspec_repo_if_dont_exists
+        pod_spec_list = sh "pod repo list"
+        sh "pod repo add CocoaPodsSpecs https://github.com/connectedinteractive/CocoaPodsSpecs" unless pod_spec_list.include? "CocoaPodsSpecs"
+    end
+  end

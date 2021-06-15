@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="fastlane.lanes">
+    
+    
+    
+      
+      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.000338">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="1: setup_circle_ci" time="0.000476">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="2: is_ci" time="0.000125">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="3: last_git_commit" time="0.09654">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="4: pod_lib_lint" time="27.276978">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="5: changelog_from_git_commits" time="0.06213">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="6: last_git_commit" time="0.098859">
+        
+      </testcase>
+    
+      
+      <testcase classname="fastlane.lanes" name="7: version_bump_podspec" time="0.000969">
+        
+      </testcase>
+    
+  </testsuite>
+</testsuites>
