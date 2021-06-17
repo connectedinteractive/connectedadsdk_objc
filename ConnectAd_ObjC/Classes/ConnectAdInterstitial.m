@@ -50,7 +50,7 @@ bool isAdsManagerInterstitial = false;
                 self.adsManagerInterstitials = interstitialArray;
             }
         }
-
+        
         NSPredicate *predicate_moPub = [NSPredicate predicateWithFormat:@"adUnitName = %@", AdKeyToString[mopub]];
         NSArray *filtered_moPub = [adUnitIds filteredArrayUsingPredicate:predicate_moPub];
         if (filtered_moPub != nil && [filtered_moPub count] != 0) {
@@ -71,7 +71,7 @@ bool isAdsManagerInterstitial = false;
         NSLog(@"No Interstitial found");
         if (self.delegate != nil &&  [(NSObject*)self.delegate respondsToSelector:@selector(onInterstitialNoAdAvailable)]) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self.delegate onInterstitialNoAdAvailable]; 
+                [self.delegate onInterstitialNoAdAvailable];
             });
         }
     } else {
@@ -123,12 +123,27 @@ bool isAdsManagerInterstitial = false;
         if (interstitialAd_Admob.adUnitId != nil) {
             interstitialAdUnitId = interstitialAd_Admob.adUnitId;
         }
-
+        
     }
     GADRequest *request = [GADRequest request];
-    self.adMobInterstitial = [[GADInterstitial alloc]initWithAdUnitID:interstitialAdUnitId];
-    self.adMobInterstitial.delegate = self;
-    [self.adMobInterstitial loadRequest:request];
+    [GADInterstitialAd loadWithAdUnitID:interstitialAdUnitId
+                                request:request
+                      completionHandler:^(GADInterstitialAd *ad, NSError *error) {
+        if (error) {
+            NSLog(@"Failed to load interstitial ad with error: %@", [error localizedDescription]);
+            [self didFailToReceiveAdWithError:error];
+            return;
+        }
+        
+        self.adMobInterstitial = ad;
+        self.adMobInterstitial.fullScreenContentDelegate = self;
+        
+        if (self.adMobInterstitial) {
+            [self.adMobInterstitial presentFromRootViewController:self->_rootViewController];
+        } else {
+            NSLog(@"Ad wasn't ready");
+        }
+    }];
 }
 
 -(void)setAdsManagerInterstitial{
@@ -141,12 +156,27 @@ bool isAdsManagerInterstitial = false;
         if (interstitialAd_AdsManager.adUnitId != nil) {
             interstitialAdUnitId = interstitialAd_AdsManager.adUnitId;
         }
-
+        
     }
-    DFPRequest *request = [DFPRequest request];
-    self.adsManagerInterstitial = [[DFPInterstitial alloc]initWithAdUnitID:interstitialAdUnitId];
-    self.adsManagerInterstitial.delegate = self;
-    [self.adsManagerInterstitial loadRequest:request];
+    GAMRequest *request = [GAMRequest request];
+    [GAMInterstitialAd loadWithAdManagerAdUnitID:interstitialAdUnitId
+                                         request:request
+                               completionHandler:^(GAMInterstitialAd *ad, NSError *error) {
+        if (error) {
+            NSLog(@"Failed to load interstitial ad with error: %@", [error localizedDescription]);
+            [self didFailToReceiveAdWithError:error];
+            return;
+        }
+        
+        self.adsManagerInterstitial = ad;
+        self.adMobInterstitial.fullScreenContentDelegate = self;
+        
+        if (self.adsManagerInterstitial) {
+            [self.adsManagerInterstitial presentFromRootViewController:self->_rootViewController];
+        } else {
+            NSLog(@"Ad wasn't ready");
+        }
+    }];
 }
 
 #pragma mark - ConnectAd
@@ -180,19 +210,19 @@ bool isAdsManagerInterstitial = false;
                         });
                         [self checkExistingConnectedAds];
                     }
-
+                    
                 } else {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self.delegate onInterstitialFailed:self.adType withError:parseError];
                     });
-
+                    
                     [self checkExistingConnectedAds];
                 }
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.delegate onInterstitialFailed:self.adType withError:error];    
+                    [self.delegate onInterstitialFailed:self.adType withError:error];
                 });
-
+                
                 [self checkExistingConnectedAds];
             }
         }];
@@ -221,21 +251,13 @@ bool isAdsManagerInterstitial = false;
 
 -(void)showConnectInterstitial:(NSString*)htmlString {
     dispatch_async(dispatch_get_main_queue(), ^{
-       NSString *replacedHtmlString = [htmlString stringByReplacingOccurrencesOfString:@"'//" withString:@"'https://"];
+        NSString *replacedHtmlString = [htmlString stringByReplacingOccurrencesOfString:@"'//" withString:@"'https://"];
         [self.rootViewController presentViewController: [ConnectInterstitialView createInstance:replacedHtmlString withDelegate:self.delegate] animated:true completion:nil];
     });
 }
 
 #pragma mark: Admob
-- (void)interstitialDidReceiveAd:(GADInterstitial *)ad{
-    if (isAdsManagerInterstitial && self.adsManagerInterstitial.isReady) {
-        [self.adsManagerInterstitial presentFromRootViewController:_rootViewController];
-    } else if ([self.adMobInterstitial isReady]) {
-        [self.adMobInterstitial presentFromRootViewController:_rootViewController];
-    }
-}
-
-- (void)interstitial:(GADInterstitial *)ad didFailToReceiveAdWithError:(GADRequestError *)error{
+- (void)didFailToReceiveAdWithError:(NSError *)error{
     [self.delegate onInterstitialFailed:self.adType withError:error];
     if(!isAdsManagerInterstitial && [self.adMobConnectIds count] != 0) {
         [self.adMobConnectIds removeObjectAtIndex:0];
@@ -265,17 +287,17 @@ bool isAdsManagerInterstitial = false;
     }
 }
 
-- (void)interstitialWillPresentScreen:(GADInterstitial *)ad{
+- (void)interstitialWillPresentScreen:(GADInterstitialAd *)ad{
     [self.delegate onInterstitialDone:self.adType];
 }
 
-- (void)interstitialDidDismissScreen:(GADInterstitial *)ad{
+- (void)interstitialDidDismissScreen:(GADInterstitialAd *)ad{
     [self.delegate onInterstitialClosed:self.adType];
 }
 
-- (void)interstitialWillLeaveApplication:(GADInterstitial *)ad{
+- (void)interstitialWillLeaveApplication:(GADInterstitialAd *)ad{
     [self.delegate onInterstitialClicked:self.adType];
-
+    
 }
 
 
@@ -333,7 +355,7 @@ bool isAdsManagerInterstitial = false;
 
 - (void)interstitialDidAppear:(MPInterstitialAdController *)interstitial{
     [self.delegate onInterstitialDone:self.adType];
-
+    
 }
 
 - (void)interstitialDidDisappear:(MPInterstitialAdController *)interstitial{

@@ -38,7 +38,7 @@ platform :ios do
         git_add
         git_commit(path: ".", message: "#{@RELEASE_MESSAGE_PREFIX} #{@VERSION}")
         add_git_tag(tag: "#{@VERSION}")
-        # push_to_git_remote
+        push_to_git_remote
 
         github_release = set_github_release(
             repository_name: "connectedinteractive/connected-ad-sdk-objc",

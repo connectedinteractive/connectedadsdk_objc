@@ -4,12 +4,12 @@
 #import <UIKit/UIKit.h>
 #import "ConnectAd.h"
 #import <GoogleMobileAds/GoogleMobileAds.h>
-#import "MoPub.h"
+#import <MoPubSDK/MoPub.h>
 #import "ConnectInterstitialView.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ConnectAdInterstitial: NSObject<MPInterstitialAdControllerDelegate, GADInterstitialDelegate>
+@interface ConnectAdInterstitial: NSObject<MPInterstitialAdControllerDelegate, GADFullScreenContentDelegate>
 
 
 @property(nonatomic, assign)AdType adType;
@@ -21,8 +21,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property(strong,nonatomic)NSMutableArray<AdId *> *adsManagerInterstitials;
 @property(strong,nonatomic)NSMutableArray<AdId *> *moPubInterstitials;
 @property(strong,nonatomic)NSMutableArray *ConnectAdInterstitials;
-@property(strong,nonatomic)GADInterstitial *adMobInterstitial;
-@property(strong,nonatomic)DFPInterstitial *adsManagerInterstitial;
+@property(strong,nonatomic)GADInterstitialAd *adMobInterstitial;
+@property(strong,nonatomic)GAMInterstitialAd *adsManagerInterstitial;
 @property(strong,nonatomic)MPInterstitialAdController *moPubInterstitial;
 @property(strong,nonatomic)NSMutableArray *interstitialOrders;
 @property(strong,nonatomic)NSMutableArray *adMobConnectIds;

@@ -148,26 +148,25 @@ static BOOL IsOperatingSystemAtLeastVersion(NSInteger majorVersion) {
             });
         }
     } else {
-        NSInteger bannerOrder = [self.bannerOrders.firstObject integerValue];
-        switch (bannerOrder) {
-            case AdMobOrder:
+        for (int index = 0; index < self.bannerOrders.count; index++) {
+            NSNumber* order = [self.bannerOrders objectAtIndex:index];
+            if (order.intValue == AdMobOrder && self.adMobConnectIds.count > 0) {
                 self.adType = ADMOB;
                 [self setAdMobBanner];
                 break;
-            case AdsManagerOrder:
+            } else if (order.intValue == AdsManagerOrder && self.adsManagerConnectIds.count > 0) {
                 self.adType = ADSMANAGER;
                 [self setAdsManagerBanner];
                 break;
-            case MoPubOrder:
+            } else if (order.intValue == MoPubOrder && self.moPubConnectIds.count > 0) {
                 self.adType = MOPUB;
                 [self setMoPubBanner];
                 break;
-            case ConnectOrder:
+            } else if (order.intValue == ConnectOrder && [self.connectAdBanners count] != 0) {
                 self.adType = CONNECT;
                 [self setConnectAd];
                 break;
-            default:
-                break;
+            }
         }
     }
 }
@@ -199,7 +198,7 @@ static BOOL IsOperatingSystemAtLeastVersion(NSInteger majorVersion) {
 -(void)setAdsManagerBanner {
     isAdsManager = true;
     self.adsManagerConnectId = self.adsManagerConnectIds.firstObject;
-    self.adsManagerBannerView = [[DFPBannerView alloc]
+    self.adsManagerBannerView = [[GAMBannerView alloc]
                             initWithAdSize:kGADAdSizeBanner];
 
     [self addBannerView:self.adsManagerBannerView];
@@ -217,7 +216,7 @@ static BOOL IsOperatingSystemAtLeastVersion(NSInteger majorVersion) {
     self.adsManagerBannerView.adUnitID = bannerAdUnitId;
     self.adsManagerBannerView.delegate = self;
     self.adsManagerBannerView.rootViewController = self.rootViewController;
-    [self.adsManagerBannerView loadRequest:[DFPRequest request]];
+    [self.adsManagerBannerView loadRequest:[GAMRequest request]];
 }
 
 -(void)setMoPubBanner{
@@ -338,11 +337,11 @@ static BOOL IsOperatingSystemAtLeastVersion(NSInteger majorVersion) {
     [self.delegate onBannerDone:self.adType];
 }
 
-- (void)adView:(nonnull GADBannerView *)bannerView didFailToReceiveAdWithError:(nonnull GADRequestError *)error{
+- (void)adView:(nonnull GADBannerView *)bannerView didFailToReceiveAdWithError:(nonnull NSError *)error{
     
     if (isAdsManager) {
         [self removeBannerView:self.adsManagerBannerView];
-        self.adsManagerBannerView = [[DFPBannerView alloc]init];
+        self.adsManagerBannerView = [[GAMBannerView alloc]init];
         self.adsManagerBannerView .hidden = YES;
     } else {
         [self removeBannerView:self.adMobBannerView];

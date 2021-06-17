@@ -4,16 +4,17 @@
 #import <UIKit/UIKit.h>
 #import "ConnectAd.h"
 #import <GoogleMobileAds/GoogleMobileAds.h>
-#import "MoPub.h"
+#import <MoPubSDK/MoPub.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ConnectAdRewarded: NSObject<GADRewardBasedVideoAdDelegate, MPRewardedVideoDelegate>
+@interface ConnectAdRewarded: NSObject<GADFullScreenContentDelegate, MPRewardedVideoDelegate>
 
 @property(strong,nonatomic)NSString *adMobConnectId;
 @property(strong,nonatomic)NSString *adsManagerConnectId;
 @property(strong,nonatomic)NSString *moPubConnectId;
 @property(strong,nonatomic)UIViewController *rootViewController;
+@property(nonatomic, strong) GADRewardedAd *rewardedAd;
 @property (assign) id <ConnectAdRewardedDelegate> delegate;
 @property(strong,nonatomic)NSMutableArray<AdId *> *adMobRewardeds;
 @property(strong,nonatomic)NSMutableArray<AdId *> *adsManagerRewardeds;

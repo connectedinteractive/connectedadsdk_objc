@@ -3,6 +3,8 @@
 #import "ConnectAd.h"
 #import <GoogleMobileAds/GoogleMobileAds.h>
 #import "MoPub.h"
+#import <AppTrackingTransparency/ATTrackingManager.h>
+
 @implementation ConnectAd
 
 NSString * const AdKeyToString[] = {
@@ -21,6 +23,14 @@ BOOL initializationStatus;
         shared = [[ConnectAd alloc] init];
     });
     return shared;
+}
+
++ (bool)needsAppTrackingPermission {
+    if (@available(iOS 14, *)) {
+        return [ATTrackingManager trackingAuthorizationStatus] == ATTrackingManagerAuthorizationStatusNotDetermined;
+    } else {
+        return false;
+    }
 }
 
 +(void)connectAdInit:(NSString*)appId completion:(void (^ __nullable)(NSMutableDictionary *response, NSError *error))completion{
@@ -384,5 +394,13 @@ BOOL initializationStatus;
 
     }];
     [dataTask resume];
+}
+
++ (void)requestAppTrackingPermissionWithCompletion:(void(^)(NSUInteger status))completion {
+    if (@available(iOS 14, *)) {
+        [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
+            completion(status);
+        }];
+    }
 }
 @end

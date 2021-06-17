@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
  s.name             = 'ConnectAd_ObjC'
- s.version          = '1.1.0'
+ s.version          = '1.1.1'
  s.summary          = 'ConnectAd_ObjC for iOS.'
  s.description      = 'This pod is used for integrating ConnectAd_ObjC in Objective-C iOS projects.'
 
@@ -20,5 +20,6 @@ Pod::Spec.new do |s|
  s.user_target_xcconfig = { 'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES' }
 
  s.static_framework = true
- s.dependencies = { "mopub-ios-sdk/Core": "~> 5.14.0", "Google-Mobile-Ads-SDK": "~> 7.58.0" }
+
+ s.dependencies = { "mopub-ios-sdk/Core": "~> 5.17.0", "Google-Mobile-Ads-SDK": "~> 8.6.0" }
 end
