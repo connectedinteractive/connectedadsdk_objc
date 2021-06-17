@@ -24,20 +24,11 @@ platform :ios do
 
     desc "Build and lint the Connect Ad SDK pod"
     lane :build do
-        if is_ci
-            sh("git", "checkout", "master")
-        end
-
         pod_lib_lint(allow_warnings: true)
-
     end
   
     desc "Releases the Connect Ad SDK pod"
     lane :deploy do
-        if is_ci
-            sh("git", "checkout", "master")
-        end
-    
         next unless ensure_can_release
 
         pod_lib_lint(allow_warnings: true)
