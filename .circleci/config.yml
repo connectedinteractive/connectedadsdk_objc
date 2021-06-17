@@ -32,7 +32,7 @@ jobs:
 
   deploy:
     macos:
-      xcode: "12.4.0"
+      xcode: "12.5.0"
     working_directory: /Users/distiller/project
     environment:
       FL_OUTPUT_DIR: output
