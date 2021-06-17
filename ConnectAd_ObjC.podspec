@@ -21,5 +21,5 @@ Pod::Spec.new do |s|
 
  s.static_framework = true
 
- s.dependencies = { "mopub-ios-sdk/Core": "~> 5.12.1", "Google-Mobile-Ads-SDK": "~> 8.6.0" }
+ s.dependencies = { "mopub-ios-sdk/Core": "~> 5.17.0", "Google-Mobile-Ads-SDK": "~> 8.6.0" }
 end
