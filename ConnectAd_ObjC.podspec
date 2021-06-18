@@ -17,8 +17,12 @@ Pod::Spec.new do |s|
    'ConnectAd_ObjC' => ['ConnectAd_ObjC/Assets/*.png']
  }
  
- s.user_target_xcconfig = { 'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES' }
+ s.pod_target_xcconfig = {
+     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'
+   }
 
+ s.user_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
+ 
  s.static_framework = true
 
  s.dependencies = { "mopub-ios-sdk/Core": "~> 5.17.0", "Google-Mobile-Ads-SDK": "~> 8.6.0" }
