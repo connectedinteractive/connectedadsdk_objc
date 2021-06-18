@@ -21,7 +21,10 @@ Pod::Spec.new do |s|
      'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'
    }
 
- s.user_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
+ s.user_target_xcconfig = {
+   'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
+   'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES'
+ }
  
  s.static_framework = true
 
