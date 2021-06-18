@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
  s.author           = { 'connsdkimpl' => 'sdkimpl@gmail.com' }
  s.source           = { :git => 'https://github.com/connectedinteractive/connectedadsdk_objc.git', :tag => s.version.to_s }
 
- s.ios.deployment_target = '10.0'
+ s.ios.deployment_target = '11.0'
 
  s.source_files = 'ConnectAd_ObjC/**/*.{h,m}'
  s.exclude_files = 'ConnectAd_ObjC/**/*.plist'
