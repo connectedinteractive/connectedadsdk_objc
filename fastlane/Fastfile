@@ -49,12 +49,12 @@ platform :ios do
             commitish: "master",
             upload_assets: []
         )
-        # clone_podspec_repo_if_dont_exists
-        # pod_push(
-		# 	path: "ConnectAd_ObjC.podspec", 
-		# 	repo: "CocoaPodsSpecs",
-		# 	allow_warnings: true
-		# )
+        clone_podspec_repo_if_dont_exists
+        pod_push(
+			path: "ConnectAd_ObjC.podspec", 
+			repo: "CocoaPodsSpecs",
+			allow_warnings: true
+		)
     end
 
     def ensure_can_release  
