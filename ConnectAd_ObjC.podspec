@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
  s.author           = { 'connsdkimpl' => 'sdkimpl@gmail.com' }
  s.source           = { :git => 'https://github.com/connectedinteractive/connectedadsdk_objc.git', :tag => s.version.to_s }
 
- s.ios.deployment_target = '11.0'
+ s.ios.deployment_target = '10.0'
 
  s.source_files = 'ConnectAd_ObjC/**/*.{h,m}'
  s.exclude_files = 'ConnectAd_ObjC/**/*.plist'
@@ -18,15 +18,17 @@ Pod::Spec.new do |s|
  }
  
  s.pod_target_xcconfig = {
-     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64'
+     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
+     'ARCHS[sdk=iphonesimulator*]' => '$(ARCHS_STANDARD_64_BIT)'
    }
 
  s.user_target_xcconfig = {
    'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64',
+   'ARCHS[sdk=iphonesimulator*]' => '$(ARCHS_STANDARD_64_BIT)',
    'CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES' => 'YES'
  }
  
  s.static_framework = true
 
- s.dependencies = { "mopub-ios-sdk/Core": "~> 5.16.2", "Google-Mobile-Ads-SDK": "~> 8.6.0" }
+ s.dependencies = { "mopub-ios-sdk/Core": "~> 5.17.0", "Google-Mobile-Ads-SDK": "~> 8.6.0" }
 end
